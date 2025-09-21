@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemini Summarizer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    textarea { width: 100%; height: 120px; }
+    button { margin-top: 10px; padding: 10px 20px; }
+    #output { margin-top: 20px; padding: 15px; border: 1px solid #ccc; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <h2>Summarize with Gemini AI</h2>
+  <textarea id="input" placeholder="Paste text here..."></textarea>
+  <br>
+  <button onclick="handleSubmit()">Summarize</button>
+  <div id="output"></div>
+
+  <button onclick="loadHistory()">Show History</button>
+<div id="history"></div>
+
+ <h2>Summarize PDF with Gemini AI</h2>
+<input type="file" id="pdfFile" />
+<button onclick="uploadPDF()">Upload & Summarize</button>
+<div id="output"></div>
+
+<button onclick="loadHistory()">Show History</button>
+<div id="history"></div>
+
+  <script>
+    async function handleSubmit() {
+      const input = document.getElementById("input").value;
+      document.getElementById("output").innerHTML = "⏳ Summarizing...";
+
+      try {
+        const response = await fetch("http://localhost:3000/api/gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: input })
+        });
+
+        const data = await response.json();
+        document.getElementById("output").innerHTML = data.output;
+      } catch (err) {
+        document.getElementById("output").innerHTML = "⚠️ Error: " + err.message;
+      }
+    }
+    async function loadHistory() {
+    try {
+      const response = await fetch("http://localhost:3000/api/history");
+      const data = await response.json();
+
+      let html = "<h3>History</h3><ul>";
+      data.forEach(item => {
+        html += `<li><b>${item.created_at}</b>: ${item.summary}</li>`;
+      });
+      html += "</ul>";
+
+      document.getElementById("history").innerHTML = html;
+    } catch (err) {
+      document.getElementById("history").innerHTML = "⚠️ Error loading history.";
+    }
+  }
+  async function uploadPDF() {
+  const fileInput = document.getElementById("pdfFile");
+  if (fileInput.files.length === 0) {
+    alert("Please select a PDF file");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("pdf", fileInput.files[0]);
+
+  document.getElementById("output").innerHTML = "⏳ Summarizing PDF...";
+
+  try {
+    const response = await fetch("http://localhost:3000/api/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+    document.getElementById("output").innerHTML = data.output;
+  } catch (err) {
+    document.getElementById("output").innerHTML = "⚠️ Error: " + err.message;
+  }
+}
+
+async function loadHistory() {
+  try {
+    const response = await fetch("http://localhost:3000/api/history");
+    const data = await response.json();
+
+    let html = "<h3>History</h3><ul>";
+    data.forEach(item => {
+      html += `<li><b>${item.created_at}</b>: ${item.summary}</li>`;
+    });
+    html += "</ul>";
+
+    document.getElementById("history").innerHTML = html;
+  } catch (err) {
+    document.getElementById("history").innerHTML = "⚠️ Error loading history.";
+  }
+}
+
+  </script>
+</body>
+</html>
